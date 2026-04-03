@@ -119,6 +119,9 @@ cubestoreRouter:
       CUBESTORE_META_PORT: "9999"
       CUBESTORE_SERVER_NAME: "cubestore-router:9999"
       CUBEJS_LOG_LEVEL: "warn"
+  persistence:
+    storageClass: "ebs-sc-retain"
+    size: 10Gi
   resources:
     requests:
       cpu: 250m
@@ -143,6 +146,9 @@ cubestoreWorker:
       CUBESTORE_WORKER_PORT: "10001"
       CUBESTORE_META_ADDR: "cubestore-router:9999"
       CUBEJS_LOG_LEVEL: "error"
+  persistence:
+    storageClass: "ebs-sc-retain"
+    size: 20Gi
   resources:
     requests:
       cpu: 500m
