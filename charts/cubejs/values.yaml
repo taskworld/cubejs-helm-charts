@@ -51,7 +51,7 @@ cubeApi:
     type: ClusterIP
     port: 4000
     service_port: 4000
-  replicas: 3
+  replicas: 1
   configmap:
     name: cubeapi-cm
   # Sensitive vars (BigQuery credentials + CUBEJS_API_SECRET) come from a K8s Secret.
