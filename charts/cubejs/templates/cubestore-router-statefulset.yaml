@@ -59,7 +59,7 @@ spec:
           image: "{{ .Values.cubestoreRouter.image }}"
           imagePullPolicy: {{ .Values.cubestoreRouter.pullPolicy }}
           ports:
-            - name: http
+            - name: tcp-meta
               containerPort: {{ .Values.cubestoreRouter.service.port }}
               protocol: TCP
             - name: http2
@@ -69,14 +69,16 @@ spec:
               containerPort: 3306
               protocol: TCP
           livenessProbe:
-            tcpSocket:
-              port: {{ .Values.cubestoreRouter.service.port }}
+            httpGet:
+              path: /livez
+              port: 3031
             initialDelaySeconds: 30
             periodSeconds: 10
             failureThreshold: 3
           readinessProbe:
-            tcpSocket:
-              port: {{ .Values.cubestoreRouter.service.port }}
+            httpGet:
+              path: /readyz
+              port: 3031
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 3

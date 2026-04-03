@@ -61,7 +61,7 @@ spec:
           image: "{{ .Values.cubestoreWorker.image }}"
           imagePullPolicy: {{ .Values.cubestoreWorker.pullPolicy }}
           ports:
-            - name: http
+            - name: tcp-worker
               containerPort: {{ .Values.cubestoreWorker.service.port }}
               protocol: TCP
           livenessProbe:
