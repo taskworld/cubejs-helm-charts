@@ -11,6 +11,6 @@ spec:
     - port: {{ .Values.cubestoreWorker.service.service_port }}
       targetPort: {{ .Values.cubestoreWorker.service.port }}
       protocol: TCP
-      name: http
+      name: tcp-worker
   selector:
     cubejsApp: cubestoreWorker

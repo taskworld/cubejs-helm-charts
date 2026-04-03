@@ -11,7 +11,7 @@ spec:
     - port: {{ .Values.cubestoreRouter.service.service_port }}
       targetPort: {{ .Values.cubestoreRouter.service.port }}
       protocol: TCP
-      name: http
+      name: tcp-meta
     - port: 3030
       targetPort: 3030
       protocol: TCP
