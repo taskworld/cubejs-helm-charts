@@ -76,6 +76,9 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 3
+          volumeMounts:
+            - name: cubestore-data
+              mountPath: /cube/.cubestore/data
           resources:
             {{- toYaml .Values.cubestoreWorker.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
@@ -90,3 +93,12 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: cubestore-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: {{ .Values.cubestoreWorker.persistence.storageClass | quote }}
+        resources:
+          requests:
+            storage: {{ .Values.cubestoreWorker.persistence.size | quote }}
