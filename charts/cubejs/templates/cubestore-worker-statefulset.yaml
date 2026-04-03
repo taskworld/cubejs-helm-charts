@@ -65,14 +65,20 @@ spec:
               containerPort: {{ .Values.cubestoreWorker.service.port }}
               protocol: TCP
           livenessProbe:
-            tcpSocket:
-              port: {{ .Values.cubestoreWorker.service.port }}
+            exec:
+              command:
+                - sh
+                - -c
+                - 'p=$(printf "%04X" {{ .Values.cubestoreWorker.service.port }}); grep -qi ":$p " /proc/net/tcp || grep -qi ":$p " /proc/net/tcp6'
             initialDelaySeconds: 30
             periodSeconds: 10
             failureThreshold: 3
           readinessProbe:
-            tcpSocket:
-              port: {{ .Values.cubestoreWorker.service.port }}
+            exec:
+              command:
+                - sh
+                - -c
+                - 'p=$(printf "%04X" {{ .Values.cubestoreWorker.service.port }}); grep -qi ":$p " /proc/net/tcp || grep -qi ":$p " /proc/net/tcp6'
             initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 3
