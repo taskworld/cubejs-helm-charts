@@ -117,7 +117,6 @@ cubestoreRouter:
   env:
     var:
       CUBESTORE_META_PORT: "9999"
-      CUBESTORE_SERVER_NAME: "cubestore-router:9999"
       CUBEJS_LOG_LEVEL: "warn"
   persistence:
     storageClass: "ebs-sc-retain"
@@ -144,7 +143,7 @@ cubestoreWorker:
   env:
     var:
       CUBESTORE_WORKER_PORT: "10001"
-      CUBESTORE_META_ADDR: "cubestore-router:9999"
+      CUBESTORE_META_ADDR: "cubestore-router-0.cubestore-router:9999"
       CUBEJS_LOG_LEVEL: "error"
   persistence:
     storageClass: "ebs-sc-retain"

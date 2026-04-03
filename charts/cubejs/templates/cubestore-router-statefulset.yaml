@@ -41,6 +41,12 @@ spec:
       containers:
         - name: {{ .Chart.Name }}
           env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: CUBESTORE_SERVER_NAME
+              value: "$(POD_NAME).cubestore-router:{{ .Values.cubestoreRouter.service.port }}"
             - name: CUBESTORE_WORKERS
               value: {{ include "chart.cubestoreWorkers" . | quote }}
           envFrom:
