@@ -3,6 +3,10 @@
 namespace: "cubejs"
 annotations:
   reloader.stakater.com/auto: "true"
+  # Prevent Istio from rewriting HTTP probes through its sidecar (port 15020).
+  # Without this, kubelet probes are routed via Istio and can time out when the
+  # sidecar is slow to start or forward requests.
+  sidecar.istio.io/rewriteAppHTTPProbers: "false"
 
 # BigQuery connection settings.
 bigquery:
