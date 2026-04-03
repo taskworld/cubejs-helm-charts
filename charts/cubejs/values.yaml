@@ -1,0 +1,163 @@
+# Default values for cubejs Helm chart.
+
+namespace: "cubejs"
+annotations:
+  reloader.stakater.com/auto: "true"
+
+# BigQuery connection settings.
+bigquery:
+  projectId: ""   # required — helm install will fail if not set
+
+# S3 remote storage shared by CubeStore router and workers.
+# IRSA on the ServiceAccount is used for authentication — no static credentials needed.
+cubestore:
+  s3:
+    bucket: ""              # required: S3 bucket name
+    region: "ap-southeast-1"
+    subPath: ""             # optional: key prefix within the bucket
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: "cubejs-sa"
+  # Set the IRSA role ARN here so CubeStore pods can access S3 without static credentials.
+  # eks.amazonaws.com/role-arn: "arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME"
+  annotations: {}
+
+podAnnotations: {}
+
+# Applied to all pods. Cube.js images run as uid 1000 (node user).
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# Applied to all containers.
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false  # Cube.js writes temp files at runtime
+
+cubeApi:
+  image: "cubejs/cube:v1.6.29"
+  # Always: ensures fresh pull on every pod start (safe since image contains schema mounts).
+  pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 4000
+    service_port: 4000
+  replicas: 3
+  configmap:
+    name: cubeapi-cm
+  # Sensitive vars (BigQuery credentials + CUBEJS_API_SECRET) come from a K8s Secret.
+  secret:
+    name: cubejs-secret
+  env:
+    var:
+      CUBEJS_DB_TYPE: "bigquery"
+      CUBEJS_DEV_MODE: "false"
+      CUBEJS_DEFAULT_API_SCOPES: "graphql,meta,data,jobs"
+      CUBEJS_CUBESTORE_HOST: "cubestore-router"
+      CUBEJS_LOG_LEVEL: "warn"
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+
+cubeRefreshWorker:
+  image: "cubejs/cube:v1.6.29"
+  # Always: consistent with cubeApi since both run the same image.
+  pullPolicy: Always
+  service:
+    type: ClusterIP
+    port: 4000
+    service_port: 4000
+  replicas: 1
+  configmap:
+    name: cuberefreshworker-cm
+  # Sensitive vars (BigQuery credentials + CUBEJS_API_SECRET) come from a K8s Secret.
+  secret:
+    name: cubejs-secret
+  env:
+    var:
+      CUBEJS_DB_TYPE: "bigquery"
+      CUBEJS_DEV_MODE: "false"
+      CUBEJS_DEFAULT_API_SCOPES: "graphql,meta,data,jobs"
+      CUBEJS_CUBESTORE_HOST: "cubestore-router"
+      CUBEJS_REFRESH_WORKER: "true"
+      CUBEJS_LOG_LEVEL: "warn"
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+cubestoreRouter:
+  # Use arm64v8 image for ARM (Graviton) nodes; remove the suffix for x86 nodes.
+  image: "cubejs/cubestore:v1.6.29-arm64v8"
+  # IfNotPresent: CubeStore uses immutable versioned tags — no need to pull on every restart.
+  pullPolicy: IfNotPresent
+  service:
+    port: 9999
+    service_port: 9999
+  # CubeStore supports only a single router — do not increase above 1.
+  replicas: 1
+  configmap:
+    name: cubestorerouter-cm
+  env:
+    var:
+      CUBESTORE_META_PORT: "9999"
+      CUBESTORE_SERVER_NAME: "cubestore-router:9999"
+      CUBEJS_LOG_LEVEL: "warn"
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+
+cubestoreWorker:
+  # Use arm64v8 image for ARM (Graviton) nodes; remove the suffix for x86 nodes.
+  image: "cubejs/cubestore:v1.6.29-arm64v8"
+  # IfNotPresent: CubeStore uses immutable versioned tags — no need to pull on every restart.
+  pullPolicy: IfNotPresent
+  service:
+    port: 10001
+    service_port: 10001
+  replicas: 1
+  configmap:
+    name: cubestoreworker-cm
+  env:
+    var:
+      CUBESTORE_WORKER_PORT: "10001"
+      CUBESTORE_META_ADDR: "cubestore-router:9999"
+      CUBEJS_LOG_LEVEL: "error"
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+
+# Autoscaling applies to cubeApi only.
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

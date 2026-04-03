@@ -1,0 +1,25 @@
+apiVersion: v2
+name: cubejs
+description: Helm chart for deploying Cube.js on Kubernetes with BigQuery and CubeStore backed by S3
+
+type: application
+
+keywords:
+  - cubejs
+  - bigquery
+  - analytics
+  - cubestore
+  - olap
+
+sources:
+  - https://github.com/cube-js/cube
+
+maintainers:
+  - name: Taskworld Platform
+    email: developers@taskworld.com
+
+# Increment this version on every chart change
+version: 1.0.0
+
+# Tracks the deployed Cube.js application version
+appVersion: "1.6.29"

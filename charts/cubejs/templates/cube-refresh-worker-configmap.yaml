@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.cubeRefreshWorker.configmap.name }}
+  namespace: {{ .Values.namespace }}
+data:
+  {{- range $key, $val := .Values.cubeRefreshWorker.env.var }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+  CUBEJS_DB_BQ_PROJECT_ID: {{ required "bigquery.projectId is required" .Values.bigquery.projectId | quote }}

@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cubestore-router
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "chart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cubestore-router
+  {{- if .Values.annotations }}
+  annotations:
+    {{- toYaml .Values.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  serviceName: cubestore-router
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.cubestoreRouter.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      cubejsApp: cubestoreRouter
+      {{- include "chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- toYaml .Values.annotations | nindent 8 }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        cubejsApp: cubestoreRouter
+        app.kubernetes.io/component: cubestore-router
+        {{- include "chart.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "chart.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          env:
+            - name: CUBESTORE_WORKERS
+              value: {{ include "chart.cubestoreWorkers" . | quote }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.cubestoreRouter.configmap.name }}
+          command: ["/bin/sh", "-c"]
+          args: ["unset CUBESTORE_WORKER_PORT; ./cubestored"]
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.cubestoreRouter.image }}"
+          imagePullPolicy: {{ .Values.cubestoreRouter.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.cubestoreRouter.service.port }}
+              protocol: TCP
+            - name: http2
+              containerPort: 3030
+              protocol: TCP
+            - name: mysql
+              containerPort: 3306
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: {{ .Values.cubestoreRouter.service.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.cubestoreRouter.service.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.cubestoreRouter.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
