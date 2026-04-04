@@ -12,5 +12,6 @@ spec:
       targetPort: {{ .Values.cubeApi.service.port }}
       protocol: TCP
       name: http
+      appProtocol: http
   selector:
     cubejsApp: cubeApi

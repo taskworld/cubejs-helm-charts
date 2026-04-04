@@ -131,6 +131,14 @@
         }
       }
     },
+    "istio": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
     "autoscaling": {
       "type": "object",
       "properties": {

@@ -3,10 +3,6 @@
 namespace: "cubejs"
 annotations:
   reloader.stakater.com/auto: "true"
-  # Prevent Istio from rewriting HTTP probes through its sidecar (port 15020).
-  # Without this, kubelet probes are routed via Istio and can time out when the
-  # sidecar is slow to start or forward requests.
-  sidecar.istio.io/rewriteAppHTTPProbers: "false"
 
 # BigQuery connection settings.
 bigquery:
@@ -170,3 +166,10 @@ autoscaling:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# Istio service mesh integration.
+# When enabled, creates PeerAuthentication (STRICT mTLS), DestinationRules
+# (h2UpgradePolicy, tcpKeepalive, idleTimeout), and ServiceEntries for external
+# services (BigQuery, S3, STS). Requires Istio CRDs to be installed in the cluster.
+istio:
+  enabled: true
