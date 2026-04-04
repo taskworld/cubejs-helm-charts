@@ -62,10 +62,10 @@ spec:
             - name: tcp-meta
               containerPort: {{ .Values.cubestoreRouter.service.port }}
               protocol: TCP
-            - name: http2
+            - name: http
               containerPort: 3030
               protocol: TCP
-            - name: mysql
+            - name: tcp-mysql-compat
               containerPort: 3306
               protocol: TCP
           livenessProbe:
