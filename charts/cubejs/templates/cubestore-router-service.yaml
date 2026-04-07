@@ -12,13 +12,16 @@ spec:
       targetPort: {{ .Values.cubestoreRouter.service.port }}
       protocol: TCP
       name: tcp-meta
+      appProtocol: tcp
     - port: 3030
       targetPort: 3030
       protocol: TCP
-      name: http2
+      name: http
+      appProtocol: http
     - port: 3306
       targetPort: 3306
       protocol: TCP
-      name: mysql
+      name: tcp-mysql-compat
+      appProtocol: tcp
   selector:
     cubejsApp: cubestoreRouter

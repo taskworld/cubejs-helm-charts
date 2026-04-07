@@ -1,0 +1,76 @@
+{{- if .Values.istio.enabled }}
+# cube-api: prevent HTTP/2 upgrade so downstream clients use HTTP/1.1
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: cube-api
+  namespace: {{ .Values.namespace }}
+spec:
+  host: cube-api.{{ .Values.namespace }}.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    connectionPool:
+      http:
+        h2UpgradePolicy: DO_NOT_UPGRADE
+        idleTimeout: 300s
+---
+# cubestore-router:
+#   port 3030 — HTTP/1.1 WebSocket; DO_NOT_UPGRADE prevents sidecar-to-sidecar H2 upgrade
+#               that would break the WebSocket handshake; idleTimeout 900s keeps long-lived
+#               WS connections alive (CubeStore heartbeats every 5s but Istio defaults are short)
+#   port 9999 — MetaStore binary RPC (flexbuffers over TCP); tcpKeepalive prevents AWS NLB/NAT
+#               from silently dropping idle sessions
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: cubestore-router
+  namespace: {{ .Values.namespace }}
+spec:
+  host: cubestore-router.{{ .Values.namespace }}.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    portLevelSettings:
+      - port:
+          number: 3030
+        connectionPool:
+          http:
+            h2UpgradePolicy: DO_NOT_UPGRADE
+            idleTimeout: 900s
+            http1MaxPendingRequests: 1024
+          tcp:
+            connectTimeout: 10s
+            tcpKeepalive:
+              time: 300s
+              interval: 75s
+      - port:
+          number: {{ .Values.cubestoreRouter.service.service_port }}
+        connectionPool:
+          tcp:
+            maxConnections: 50
+            connectTimeout: 10s
+            tcpKeepalive:
+              time: 300s
+              interval: 75s
+---
+# cubestore-worker: binary TCP RPC from router; tcpKeepalive prevents AWS NLB/NAT idle drops
+# CubeStore has no app-level keepalive for this channel
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: cubestore-worker
+  namespace: {{ .Values.namespace }}
+spec:
+  host: cubestore-worker.{{ .Values.namespace }}.svc.cluster.local
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+    connectionPool:
+      tcp:
+        maxConnections: 100
+        connectTimeout: 10s
+        tcpKeepalive:
+          time: 300s
+          interval: 75s
+{{- end }}
