@@ -168,8 +168,7 @@ tolerations: []
 affinity: {}
 
 # Istio service mesh integration.
-# When enabled, creates PeerAuthentication (STRICT mTLS), DestinationRules
-# (h2UpgradePolicy, tcpKeepalive, idleTimeout), and ServiceEntries for external
-# services (BigQuery, S3, STS). Requires Istio CRDs to be installed in the cluster.
+# When enabled, creates DestinationRules (h2UpgradePolicy, tcpKeepalive, idleTimeout).
+# Requires Istio CRDs to be installed in the cluster.
 istio:
   enabled: true
