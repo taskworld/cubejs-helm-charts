@@ -65,7 +65,7 @@ spec:
             - name: http
               containerPort: 3030
               protocol: TCP
-            - name: tcp-mysql-compat
+            - name: mysql-compat
               containerPort: 3306
               protocol: TCP
           livenessProbe:
