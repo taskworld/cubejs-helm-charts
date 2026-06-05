@@ -13,5 +13,12 @@ spec:
       protocol: TCP
       name: http
       appProtocol: http
+    {{- if .Values.cubeApi.sql.enabled }}
+    - port: {{ .Values.cubeApi.sql.port }}
+      targetPort: pg-sql
+      protocol: TCP
+      name: pg-sql
+      appProtocol: tcp
+    {{- end }}
   selector:
     cubejsApp: cubeApi
