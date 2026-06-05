@@ -8,3 +8,7 @@ data:
   {{ $key }}: {{ $val | quote }}
   {{- end }}
   CUBEJS_DB_BQ_PROJECT_ID: {{ required "bigquery.projectId is required" .Values.bigquery.projectId | quote }}
+  {{- if .Values.cubeApi.sql.enabled }}
+  # Enables the Postgres-compatible SQL API. CUBEJS_SQL_USER/CUBEJS_SQL_PASSWORD come from the Secret.
+  CUBEJS_PG_SQL_PORT: {{ .Values.cubeApi.sql.port | quote }}
+  {{- end }}

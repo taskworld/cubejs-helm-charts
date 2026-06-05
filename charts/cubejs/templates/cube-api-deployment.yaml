@@ -50,6 +50,11 @@ spec:
             - name: http
               containerPort: {{ .Values.cubeApi.service.port }}
               protocol: TCP
+            {{- if .Values.cubeApi.sql.enabled }}
+            - name: pg-sql
+              containerPort: {{ .Values.cubeApi.sql.port }}
+              protocol: TCP
+            {{- end }}
           startupProbe:
             httpGet:
               path: /livez

@@ -57,6 +57,13 @@ cubeApi:
   # Sensitive vars (BigQuery credentials + CUBEJS_API_SECRET) come from a K8s Secret.
   secret:
     name: cubejs-secret
+  # Postgres-compatible SQL API. Off by default (Cube's default) — REST/GraphQL work without it.
+  # When enabled, setting CUBEJS_PG_SQL_PORT turns the SQL API on and the port is exposed on the Service.
+  # CUBEJS_SQL_USER / CUBEJS_SQL_PASSWORD are arbitrary client credentials — add both to the K8s Secret
+  # (secret.name). They are unrelated to BigQuery auth.
+  sql:
+    enabled: false
+    port: 15432
   env:
     var:
       CUBEJS_DB_TYPE: "bigquery"

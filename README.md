@@ -31,6 +31,8 @@ Required keys:
 |-----|-------------|
 | `CUBEJS_API_SECRET` | Cryptographically random string (minimum 32 bytes / 64 hex chars) used to sign JWT tokens for API access. Generate with: `openssl rand -hex 32` |
 | `CUBEJS_DB_BQ_CREDENTIALS_FILE` | BigQuery service account JSON key (file contents) |
+| `CUBEJS_SQL_USER` | **Only when the SQL API is enabled** (`cubeApi.sql.enabled=true`). Arbitrary username SQL clients use to connect over the Postgres protocol. Unrelated to BigQuery auth. |
+| `CUBEJS_SQL_PASSWORD` | **Only when the SQL API is enabled.** Arbitrary password for the SQL client connection. |
 
 ```bash
 kubectl create secret generic cubejs-secret \
@@ -111,6 +113,28 @@ cubestoreWorker:
   image: "cubejs/cubestore:v1.6.29"
 ```
 
+## SQL API (Postgres protocol)
+
+Cube's Postgres-compatible SQL API is **off by default** (REST and GraphQL work without it). Enable it to connect BI tools (Metabase, Superset, `psql`):
+
+```yaml
+cubeApi:
+  sql:
+    enabled: true
+    port: 15432
+```
+
+When enabled, the chart sets `CUBEJS_PG_SQL_PORT` and exposes the port on the `cube-api` Service. The client credentials `CUBEJS_SQL_USER` and `CUBEJS_SQL_PASSWORD` are **arbitrary values you choose** — add both to the K8s Secret (`cubeApi.secret.name`) before enabling. They are independent of BigQuery authentication:
+
+```bash
+kubectl create secret generic cubejs-secret \
+  --from-literal=CUBEJS_API_SECRET=$(openssl rand -hex 32) \
+  --from-file=CUBEJS_DB_BQ_CREDENTIALS_FILE=sa-key.json \
+  --from-literal=CUBEJS_SQL_USER=cube \
+  --from-literal=CUBEJS_SQL_PASSWORD=$(openssl rand -hex 16) \
+  -n cubejs
+```
+
 ## Key values
 
 | Value | Default | Description |
@@ -127,3 +151,5 @@ cubestoreWorker:
 | `cubestoreRouter.replicas` | `1` | CubeStore router pods — do not exceed 1 |
 | `cubestoreWorker.replicas` | `1` | Number of CubeStore worker pods |
 | `cubeApi.secret.name` | `cubejs-secret` | Name of the K8s Secret with credentials |
+| `cubeApi.sql.enabled` | `false` | Enable the Postgres-compatible SQL API |
+| `cubeApi.sql.port` | `15432` | Port for the SQL API (set via `CUBEJS_PG_SQL_PORT`) |
