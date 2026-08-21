@@ -9,7 +9,7 @@ spec:
   host: cube-api.{{ .Values.namespace }}.svc.cluster.local
   trafficPolicy:
     tls:
-      mode: ISTIO_MUTUAL
+      mode: DISABLED
     connectionPool:
       http:
         h2UpgradePolicy: DO_NOT_UPGRADE
@@ -30,7 +30,7 @@ spec:
   host: cubestore-router.{{ .Values.namespace }}.svc.cluster.local
   trafficPolicy:
     tls:
-      mode: ISTIO_MUTUAL
+      mode: DISABLED
     portLevelSettings:
       - port:
           number: 3030
@@ -65,7 +65,7 @@ spec:
   host: cubestore-worker.{{ .Values.namespace }}.svc.cluster.local
   trafficPolicy:
     tls:
-      mode: ISTIO_MUTUAL
+      mode: DISABLED
     connectionPool:
       tcp:
         maxConnections: 100
