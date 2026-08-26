@@ -67,6 +67,8 @@ cubeApi:
   env:
     var:
       CUBEJS_DB_TYPE: "bigquery"
+      CUBEJS_DB_BQ_LOCATION: "EU"
+      CUBEJS_PRE_AGGREGATIONS_SCHEMA: "cube_pre_aggregations"
       CUBEJS_DEV_MODE: "false"
       CUBEJS_DEFAULT_API_SCOPES: "graphql,meta,data,jobs"
       CUBEJS_CUBESTORE_HOST: "cubestore-router"
@@ -96,6 +98,8 @@ cubeRefreshWorker:
   env:
     var:
       CUBEJS_DB_TYPE: "bigquery"
+      CUBEJS_DB_BQ_LOCATION: "EU"
+      CUBEJS_PRE_AGGREGATIONS_SCHEMA: "cube_pre_aggregations"
       CUBEJS_DEV_MODE: "false"
       CUBEJS_DEFAULT_API_SCOPES: "graphql,meta,data,jobs"
       CUBEJS_CUBESTORE_HOST: "cubestore-router"
