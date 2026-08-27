@@ -3,6 +3,28 @@ entries:
   cubejs:
   - apiVersion: v2
     appVersion: 1.6.29
+    created: "2026-08-27T10:48:41.594332721Z"
+    description: Helm chart for deploying Cube.js on Kubernetes with BigQuery and
+      CubeStore backed by S3
+    digest: 9471b0c34b623f437c134979646b9dedf2b8b11777a3b417045fec39d6304d24
+    keywords:
+    - cubejs
+    - bigquery
+    - analytics
+    - cubestore
+    - olap
+    maintainers:
+    - email: developers@taskworld.com
+      name: Taskworld Platform
+    name: cubejs
+    sources:
+    - https://github.com/cube-js/cube
+    type: application
+    urls:
+    - https://github.com/taskworld/cubejs-helm-charts/releases/download/cubejs-1.0.12/cubejs-1.0.12.tgz
+    version: 1.0.12
+  - apiVersion: v2
+    appVersion: 1.6.29
     created: "2026-08-27T10:24:51.547864881Z"
     description: Helm chart for deploying Cube.js on Kubernetes with BigQuery and
       CubeStore backed by S3
@@ -243,4 +265,4 @@ entries:
     urls:
     - https://github.com/taskworld/cubejs-helm-charts/releases/download/cubejs-1.0.1/cubejs-1.0.1.tgz
     version: 1.0.1
-generated: "2026-08-27T10:24:51.547896038Z"
+generated: "2026-08-27T10:48:41.594373913Z"
