@@ -107,6 +107,12 @@ spec:
                   find "$d" -maxdepth 1 -type d -name "$s-*" -mmin +120 \
                     ! -name "$cur" ! -name "$cur-logs" -exec rm -rf {} + 2>/dev/null
                 done
+                # temp-uploads is a staging area Cubestore abandons files in after
+                # uploading them to S3 (same bug, issue 9114). Nothing legitimate lives
+                # here for a day, so age alone is a safe test -- there is no live state
+                # to protect. -delete implies -depth, so files go before their dirs and
+                # a non-empty directory is never removed.
+                find "$d/temp-uploads" -mindepth 1 -mmin +1440 -delete 2>/dev/null
                 echo "janitor: pass done, $(df -h "$d" | awk 'NR==2{print $5}') used"
                 sleep 600
               done
