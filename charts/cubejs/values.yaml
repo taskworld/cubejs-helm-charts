@@ -131,7 +131,7 @@ cubestoreRouter:
       CUBEJS_LOG_LEVEL: "warn"
   persistence:
     storageClass: "ebs-sc-retain"
-    size: 50Gi
+    size: 100Gi
   resources:
     requests:
       cpu: 250m
