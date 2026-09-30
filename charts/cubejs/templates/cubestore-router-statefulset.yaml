@@ -87,6 +87,41 @@ spec:
               mountPath: /cube/.cubestore/data
           resources:
             {{- toYaml .Values.cubestoreRouter.resources | nindent 12 }}
+        # Cubestore writes a RocksDB checkpoint to local disk every ~5 min and never
+        # removes it: delete_old_snapshots() in metastore/rocks_fs.rs prunes remote
+        # storage only. Checkpoints hard-link SST files, so every SST ever written stays
+        # pinned — a 469M live cachestore held 48Gi of disk before this existed.
+        # Upstream: github.com/cube-js/cube/issues/9114 (same bug, temp-uploads).
+        # Delete this sidecar once Cubestore cleans up after itself.
+        - name: checkpoint-janitor
+          image: busybox:1.36@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              d=/cube/.cubestore/data
+              while true; do
+                for s in cachestore metastore; do
+                  cur=$(cat "$d/$s-current" 2>/dev/null)
+                  # No pointer means we can't tell which checkpoint is live — skip, don't guess.
+                  [ -n "$cur" ] || continue
+                  find "$d" -maxdepth 1 -type d -name "$s-*" -mmin +120 \
+                    ! -name "$cur" ! -name "$cur-logs" -exec rm -rf {} + 2>/dev/null
+                done
+                echo "janitor: pass done, $(df -h "$d" | awk 'NR==2{print $5}') used"
+                sleep 600
+              done
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            - name: cubestore-data
+              mountPath: /cube/.cubestore/data
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
