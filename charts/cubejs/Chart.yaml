@@ -19,7 +19,7 @@ maintainers:
     email: developers@taskworld.com
 
 # Increment this version on every chart change
-version: 1.0.15
+version: 1.0.16
 
 # Tracks the deployed Cube.js application version
-appVersion: "1.6.29"
+appVersion: "1.7.46"

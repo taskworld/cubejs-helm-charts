@@ -25,17 +25,7 @@ serviceAccount:
   name: "cubejs-sa"
   # Set the IRSA role ARN here so CubeStore pods can access S3 without static credentials.
   # eks.amazonaws.com/role-arn: "arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME"
-  annotations:
-    # CubeStore re-derives its S3 web identity credentials only when this token file's
-    # mtime changes (spawn_creds_refresh_loop). EKS rotates the token near 80% of its
-    # lifetime, so at the 86400s default the file sits unchanged for ~19h while the STS
-    # session dies after 1h -- every upload then fails with HTTP 400 ExpiredToken,
-    # roughly one working hour of uploads per pod lifetime.
-    # 600 makes kubelet rewrite the file every ~480s, which keeps credentials fresh.
-    # Costs ~180 extra STS calls/day. Takes effect only on pod recreation.
-    # Upstream: github.com/cube-js/cube/issues/11622, fixed by #11808 (releases after
-    # 2026-09-25). Drop this once CubeStore is upgraded past that.
-    eks.amazonaws.com/token-expiration: "600"
+  annotations: {}
 
 podAnnotations: {}
 
@@ -54,7 +44,7 @@ securityContext:
   readOnlyRootFilesystem: false  # Cube.js writes temp files at runtime
 
 cubeApi:
-  image: "cubejs/cube:v1.6.29"
+  image: "cubejs/cube:v1.7.46"
   # Always: ensures fresh pull on every pod start (safe since image contains schema mounts).
   pullPolicy: Always
   service:
@@ -92,7 +82,7 @@ cubeApi:
       memory: 2Gi
 
 cubeRefreshWorker:
-  image: "cubejs/cube:v1.6.29"
+  image: "cubejs/cube:v1.7.46"
   # Always: consistent with cubeApi since both run the same image.
   pullPolicy: Always
   service:
@@ -125,7 +115,7 @@ cubeRefreshWorker:
 
 cubestoreRouter:
   # Use arm64v8 image for ARM (Graviton) nodes; remove the suffix for x86 nodes.
-  image: "cubejs/cubestore:v1.6.29-arm64v8"
+  image: "cubejs/cubestore:v1.7.46-arm64v8"
   # IfNotPresent: CubeStore uses immutable versioned tags — no need to pull on every restart.
   pullPolicy: IfNotPresent
   service:
@@ -152,7 +142,7 @@ cubestoreRouter:
 
 cubestoreWorker:
   # Use arm64v8 image for ARM (Graviton) nodes; remove the suffix for x86 nodes.
-  image: "cubejs/cubestore:v1.6.29-arm64v8"
+  image: "cubejs/cubestore:v1.7.46-arm64v8"
   # IfNotPresent: CubeStore uses immutable versioned tags — no need to pull on every restart.
   pullPolicy: IfNotPresent
   service:
