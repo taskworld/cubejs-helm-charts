@@ -103,6 +103,12 @@
           "type": "string",
           "enum": ["Always", "IfNotPresent", "Never"]
         },
+        "modelsConfigMap": {
+          "type": "string"
+        },
+        "projectConfigMap": {
+          "type": "string"
+        },
         "resources": {
           "$ref": "#/$defs/resources"
         }
