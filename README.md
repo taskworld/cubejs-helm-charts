@@ -135,6 +135,20 @@ kubectl create secret generic cubejs-secret \
   -n cubejs
 ```
 
+## Data model and project config
+
+Cube reads its data model from the directory in `CUBEJS_SCHEMA_PATH` (`/cube/conf/model` by default) and its project config from `/cube/conf/cube.js`. If both live in ConfigMaps managed outside this chart, point the chart at them:
+
+```yaml
+cubeApi:
+  modelsConfigMap: cube-models
+  projectConfigMap: cube-config
+```
+
+`modelsConfigMap` is **copied** into an `emptyDir` mounted at the schema path by an init container, rather than mounted there directly. Cube walks the schema directory recursively and follows symlinks without skipping dot-directories, so a directory-mounted ConfigMap also exposes the kubelet's `..data` symlink and its `..<timestamp>` directory — every model file would be compiled two to three times, which Cube ≥ v1.7 rejects with `Found duplicate cube name '…'` and the whole schema fails to build.
+
+Because it is a copy, editing the models ConfigMap no longer changes the running pods' files in place: the pods pick up the new model on their next restart. The chart's default `reloader.stakater.com/auto` annotation makes Stakater Reloader roll the Deployment when the ConfigMap changes, so with Reloader installed nothing extra is needed — without it, restart the `cube-api` pods after a model change.
+
 ## Key values
 
 | Value | Default | Description |
@@ -151,5 +165,7 @@ kubectl create secret generic cubejs-secret \
 | `cubestoreRouter.replicas` | `1` | CubeStore router pods — do not exceed 1 |
 | `cubestoreWorker.replicas` | `1` | Number of CubeStore worker pods |
 | `cubeApi.secret.name` | `cubejs-secret` | Name of the K8s Secret with credentials |
+| `cubeApi.modelsConfigMap` | `""` | ConfigMap with the Cube data model, copied to `CUBEJS_SCHEMA_PATH` |
+| `cubeApi.projectConfigMap` | `""` | ConfigMap with `cube.js`, mounted at `/cube/conf/cube.js` |
 | `cubeApi.sql.enabled` | `false` | Enable the Postgres-compatible SQL API |
 | `cubeApi.sql.port` | `15432` | Port for the SQL API (set via `CUBEJS_PG_SQL_PORT`) |

@@ -57,6 +57,14 @@ cubeApi:
   # Sensitive vars (BigQuery credentials + CUBEJS_API_SECRET) come from a K8s Secret.
   secret:
     name: cubejs-secret
+  # Optional. ConfigMap whose keys are the Cube data model files (.yml/.js). Set it whenever the
+  # model lives in a ConfigMap — mounting one directly at the schema path makes Cube compile the
+  # kubelet's `..data` and `..<timestamp>` copies of every file as well, i.e. "Found duplicate cube
+  # name". Changes require a rollout; the Reloader annotation restarts the pod for you.
+  modelsConfigMap: ""
+  # Optional. ConfigMap holding the project's cube.js under the key `cube.js`, mounted as
+  # /cube/conf/cube.js and overriding the image's default.
+  projectConfigMap: ""
   # Postgres-compatible SQL API. Off by default (Cube's default) — REST/GraphQL work without it.
   # When enabled, setting CUBEJS_PG_SQL_PORT turns the SQL API on and the port is exposed on the Service.
   # CUBEJS_SQL_USER / CUBEJS_SQL_PASSWORD are arbitrary client credentials — add both to the K8s Secret
