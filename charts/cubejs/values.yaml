@@ -103,6 +103,12 @@ cubeRefreshWorker:
   # Sensitive vars (BigQuery credentials + CUBEJS_API_SECRET) come from a K8s Secret.
   secret:
     name: cubejs-secret
+  # Optional. Same as cubeApi.modelsConfigMap: the refresh worker compiles the same schema, so it
+  # needs the models too. Set both or neither — a worker without them cannot build pre-aggregations.
+  modelsConfigMap: ""
+  # Optional. Same as cubeApi.projectConfigMap. Only needed if the schema uses contextToGroups or
+  # another cube.js hook while refreshing.
+  projectConfigMap: ""
   env:
     var:
       CUBEJS_DB_TYPE: "bigquery"

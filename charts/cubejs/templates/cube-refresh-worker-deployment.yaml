@@ -33,6 +33,25 @@ spec:
       serviceAccountName: {{ include "chart.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.cubeRefreshWorker.modelsConfigMap }}
+      initContainers:
+        # The refresh worker compiles the same schema, so it needs the same flattened copy of the
+        # models ConfigMap: mounted as a directory at the schema path, Cube also reads the kubelet's
+        # `..data` and `..<timestamp>` copies and rejects the duplicates ("Found duplicate cube
+        # name"). See cube-api-deployment.yaml for the same block.
+        - name: copy-models
+          image: "{{ .Values.cubeRefreshWorker.image }}"
+          imagePullPolicy: {{ .Values.cubeRefreshWorker.pullPolicy }}
+          command: ["sh", "-c", "cp /models-src/* /cube/conf/model/"]
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            - name: cube-models-src
+              mountPath: /models-src
+              readOnly: true
+            - name: cube-models
+              mountPath: /cube/conf/model
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           envFrom:
@@ -76,6 +95,34 @@ spec:
             failureThreshold: 3
           resources:
             {{- toYaml .Values.cubeRefreshWorker.resources | nindent 12 }}
+          {{- if or .Values.cubeRefreshWorker.modelsConfigMap .Values.cubeRefreshWorker.projectConfigMap }}
+          volumeMounts:
+            {{- if .Values.cubeRefreshWorker.modelsConfigMap }}
+            - name: cube-models
+              mountPath: /cube/conf/model
+            {{- end }}
+            {{- if .Values.cubeRefreshWorker.projectConfigMap }}
+            - name: cube-config
+              mountPath: /cube/conf/cube.js
+              subPath: cube.js
+              readOnly: true
+            {{- end }}
+          {{- end }}
+      {{- if or .Values.cubeRefreshWorker.modelsConfigMap .Values.cubeRefreshWorker.projectConfigMap }}
+      volumes:
+        {{- if .Values.cubeRefreshWorker.modelsConfigMap }}
+        - name: cube-models-src
+          configMap:
+            name: {{ .Values.cubeRefreshWorker.modelsConfigMap }}
+        - name: cube-models
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.cubeRefreshWorker.projectConfigMap }}
+        - name: cube-config
+          configMap:
+            name: {{ .Values.cubeRefreshWorker.projectConfigMap }}
+        {{- end }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
