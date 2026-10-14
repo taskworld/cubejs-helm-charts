@@ -64,6 +64,12 @@
           "type": "string",
           "enum": ["Always", "IfNotPresent", "Never"]
         },
+        "modelsConfigMap": {
+          "type": "string"
+        },
+        "projectConfigMap": {
+          "type": "string"
+        },
         "sql": {
           "type": "object",
           "properties": {

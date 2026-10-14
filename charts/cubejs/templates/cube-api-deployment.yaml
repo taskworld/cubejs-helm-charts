@@ -33,6 +33,25 @@ spec:
       serviceAccountName: {{ include "chart.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.cubeApi.modelsConfigMap }}
+      initContainers:
+        # Cube walks the schema directory recursively and follows symlinks without skipping
+        # dot-directories, so mounting the models ConfigMap there directly feeds it the kubelet's
+        # `..data` and `..<timestamp>` copies as well and every cube compiles two to three times
+        # ("Found duplicate cube name"). Copying the keys out flattens the mount to plain files.
+        - name: copy-models
+          image: "{{ .Values.cubeApi.image }}"
+          imagePullPolicy: {{ .Values.cubeApi.pullPolicy }}
+          command: ["sh", "-c", "cp /models-src/* /cube/conf/model/"]
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            - name: cube-models-src
+              mountPath: /models-src
+              readOnly: true
+            - name: cube-models
+              mountPath: /cube/conf/model
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           envFrom:
@@ -81,6 +100,34 @@ spec:
             failureThreshold: 3
           resources:
             {{- toYaml .Values.cubeApi.resources | nindent 12 }}
+          {{- if or .Values.cubeApi.modelsConfigMap .Values.cubeApi.projectConfigMap }}
+          volumeMounts:
+            {{- if .Values.cubeApi.modelsConfigMap }}
+            - name: cube-models
+              mountPath: /cube/conf/model
+            {{- end }}
+            {{- if .Values.cubeApi.projectConfigMap }}
+            - name: cube-config
+              mountPath: /cube/conf/cube.js
+              subPath: cube.js
+              readOnly: true
+            {{- end }}
+          {{- end }}
+      {{- if or .Values.cubeApi.modelsConfigMap .Values.cubeApi.projectConfigMap }}
+      volumes:
+        {{- if .Values.cubeApi.modelsConfigMap }}
+        - name: cube-models-src
+          configMap:
+            name: {{ .Values.cubeApi.modelsConfigMap }}
+        - name: cube-models
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.cubeApi.projectConfigMap }}
+        - name: cube-config
+          configMap:
+            name: {{ .Values.cubeApi.projectConfigMap }}
+        {{- end }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
