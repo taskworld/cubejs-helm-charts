@@ -91,13 +91,7 @@ spec:
             timeoutSeconds: 5
             failureThreshold: 3
           readinessProbe:
-            httpGet:
-              path: /readyz
-              port: http
-            initialDelaySeconds: 20
-            periodSeconds: 5
-            timeoutSeconds: 5
-            failureThreshold: 3
+            {{- include "chart.schemaReadinessProbe" .Values.cubeApi.service.port | nindent 12 }}
           resources:
             {{- toYaml .Values.cubeApi.resources | nindent 12 }}
           {{- if or .Values.cubeApi.modelsConfigMap .Values.cubeApi.projectConfigMap }}
