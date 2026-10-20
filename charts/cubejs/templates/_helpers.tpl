@@ -103,3 +103,17 @@ periodSeconds: 30
 timeoutSeconds: 5
 failureThreshold: 3
 {{- end }}
+
+
+{{/*
+Cube Store only refreshes IRSA credentials before they expire when these two variables are set
+(remotefs/s3.rs at v1.7.46, L65-66). It ignores the AWS_ROLE_ARN / AWS_WEB_IDENTITY_TOKEN_FILE that
+EKS injects; with only those, it refreshes every 180 min while the STS session lasts 60, so uploads
+fail two hours in three. Derived from the service account's IRSA annotation, so no new value to set.
+*/}}
+{{- define "chart.cubestoreWebIdentityEnv" -}}
+{{- with index .Values.serviceAccount.annotations "eks.amazonaws.com/role-arn" }}
+CUBESTORE_AWS_ROLE_ARN: {{ . | quote }}
+CUBESTORE_AWS_WEB_IDENTITY_TOKEN_FILE: "/var/run/secrets/eks.amazonaws.com/serviceaccount/token"
+{{- end }}
+{{- end }}
