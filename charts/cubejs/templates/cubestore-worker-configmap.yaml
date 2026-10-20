@@ -12,3 +12,4 @@ data:
   {{- if .Values.cubestore.s3.subPath }}
   CUBESTORE_S3_SUB_PATH: {{ .Values.cubestore.s3.subPath | quote }}
   {{- end }}
+  {{- include "chart.cubestoreWebIdentityEnv" . | nindent 2 }}
