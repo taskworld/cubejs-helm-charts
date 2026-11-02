@@ -63,14 +63,15 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 12
+          # More tolerant than readiness: a slow pod is pulled from rotation before it gets restarted.
           livenessProbe:
             httpGet:
               path: /livez
               port: http
             initialDelaySeconds: 60
             periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
+            timeoutSeconds: 10
+            failureThreshold: 5
           readinessProbe:
             httpGet:
               path: /readyz
