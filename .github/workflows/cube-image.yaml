@@ -1,0 +1,45 @@
+name: Build and Push Cube image (ECR)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["images/cube/**"]
+
+jobs:
+  build-and-push:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-1
+
+      - id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - uses: docker/setup-qemu-action@v4
+
+      - uses: docker/setup-buildx-action@v4
+
+      # Tag = upstream Cube version + build, e.g. v1.7.46-ioredis-12-1a2b3c4, so the base is visible in every pin.
+      - id: tag
+        run: |
+          base=$(sed -n 's/^FROM cubejs\/cube:\(v[0-9.]*\).*/\1/p' images/cube/Dockerfile)
+          echo "value=${base}-ioredis-${{ github.run_number }}-$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: images/cube
+          # Node architecture differs across clusters; Cube's own image ships both.
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/cube:${{ steps.tag.outputs.value }}
+
+      - run: echo "Pushed \`${{ steps.login-ecr.outputs.registry }}/cube:${{ steps.tag.outputs.value }}\`" >> "$GITHUB_STEP_SUMMARY"
