@@ -1,0 +1,23 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "minimumReleaseAge": "7 days",
+  "customManagers": [
+    {
+      "description": "Image tags are single strings here, so the helm-values manager cannot see them",
+      "customType": "regex",
+      "managerFilePatterns": ["/charts/cubejs/values\\.yaml$/"],
+      "matchStrings": [
+        "image: \"(?<depName>cubejs/[a-z]+):(?<currentValue>v[\\d.]+)(?<suffix>-arm64v8)?\""
+      ],
+      "datasourceTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Cube and Cube Store are version-matched upstream and must not drift apart",
+      "matchPackageNames": ["cubejs/cube", "cubejs/cubestore"],
+      "groupName": "cube stack"
+    }
+  ]
+}

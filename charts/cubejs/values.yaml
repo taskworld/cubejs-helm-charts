@@ -44,7 +44,7 @@ securityContext:
   readOnlyRootFilesystem: false  # Cube.js writes temp files at runtime
 
 cubeApi:
-  image: "cubejs/cube:v1.6.29"
+  image: "cubejs/cube:v1.7.46"
   # Always: ensures fresh pull on every pod start (safe since image contains schema mounts).
   pullPolicy: Always
   service:
@@ -57,6 +57,14 @@ cubeApi:
   # Sensitive vars (BigQuery credentials + CUBEJS_API_SECRET) come from a K8s Secret.
   secret:
     name: cubejs-secret
+  # Optional. ConfigMap whose keys are the Cube data model files (.yml/.js). Set it whenever the
+  # model lives in a ConfigMap — mounting one directly at the schema path makes Cube compile the
+  # kubelet's `..data` and `..<timestamp>` copies of every file as well, i.e. "Found duplicate cube
+  # name". Changes require a rollout; the Reloader annotation restarts the pod for you.
+  modelsConfigMap: ""
+  # Optional. ConfigMap holding the project's cube.js under the key `cube.js`, mounted as
+  # /cube/conf/cube.js and overriding the image's default.
+  projectConfigMap: ""
   # Postgres-compatible SQL API. Off by default (Cube's default) — REST/GraphQL work without it.
   # When enabled, setting CUBEJS_PG_SQL_PORT turns the SQL API on and the port is exposed on the Service.
   # CUBEJS_SQL_USER / CUBEJS_SQL_PASSWORD are arbitrary client credentials — add both to the K8s Secret
@@ -83,7 +91,7 @@ cubeApi:
       memory: 2Gi
 
 cubeRefreshWorker:
-  image: "cubejs/cube:v1.6.29"
+  image: "cubejs/cube:v1.7.46"
   # Always: consistent with cubeApi since both run the same image.
   pullPolicy: Always
   service:
@@ -96,6 +104,12 @@ cubeRefreshWorker:
   # Sensitive vars (BigQuery credentials + CUBEJS_API_SECRET) come from a K8s Secret.
   secret:
     name: cubejs-secret
+  # Optional. Same as cubeApi.modelsConfigMap: the refresh worker compiles the same schema, so it
+  # needs the models too. Set both or neither — a worker without them cannot build pre-aggregations.
+  modelsConfigMap: ""
+  # Optional. Same as cubeApi.projectConfigMap. Only needed if the schema uses contextToGroups or
+  # another cube.js hook while refreshing.
+  projectConfigMap: ""
   env:
     var:
       CUBEJS_DB_TYPE: "bigquery"
@@ -116,7 +130,7 @@ cubeRefreshWorker:
 
 cubestoreRouter:
   # Use arm64v8 image for ARM (Graviton) nodes; remove the suffix for x86 nodes.
-  image: "cubejs/cubestore:v1.6.29-arm64v8"
+  image: "cubejs/cubestore:v1.7.46-arm64v8"
   # IfNotPresent: CubeStore uses immutable versioned tags — no need to pull on every restart.
   pullPolicy: IfNotPresent
   service:
@@ -132,7 +146,7 @@ cubestoreRouter:
       CUBEJS_LOG_LEVEL: "warn"
   persistence:
     storageClass: "ebs-sc-retain"
-    size: 50Gi
+    size: 100Gi
   resources:
     requests:
       cpu: 250m
@@ -143,7 +157,7 @@ cubestoreRouter:
 
 cubestoreWorker:
   # Use arm64v8 image for ARM (Graviton) nodes; remove the suffix for x86 nodes.
-  image: "cubejs/cubestore:v1.6.29-arm64v8"
+  image: "cubejs/cubestore:v1.7.46-arm64v8"
   # IfNotPresent: CubeStore uses immutable versioned tags — no need to pull on every restart.
   pullPolicy: IfNotPresent
   service:
