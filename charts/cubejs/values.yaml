@@ -51,7 +51,7 @@ cubeApi:
     type: ClusterIP
     port: 4000
     service_port: 4000
-  replicas: 1
+  replicas: 2
   configmap:
     name: cubeapi-cm
   # Sensitive vars (BigQuery credentials + CUBEJS_API_SECRET) come from a K8s Secret.
@@ -81,10 +81,11 @@ cubeApi:
       CUBEJS_DEFAULT_API_SCOPES: "graphql,meta,data,jobs"
       CUBEJS_CUBESTORE_HOST: "cubestore-router"
       CUBEJS_LOG_LEVEL: "warn"
+      NODE_OPTIONS: "--max-old-space-size=1536"
   resources:
     requests:
-      cpu: 500m
-      memory: 512Mi
+      cpu: 1000m
+      memory: 1Gi
     limits:
       cpu: 2000m
       memory: 2Gi
@@ -183,9 +184,9 @@ cubestoreWorker:
 
 # Autoscaling applies to cubeApi only.
 autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 10
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 4
   targetCPUUtilizationPercentage: 80
 
 nodeSelector: {}

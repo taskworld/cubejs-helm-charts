@@ -88,8 +88,8 @@ spec:
               port: http
             initialDelaySeconds: 60
             periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
+            timeoutSeconds: 10
+            failureThreshold: 5
           readinessProbe:
             {{- include "chart.schemaReadinessProbe" .Values.cubeApi.service.port | nindent 12 }}
           resources:
